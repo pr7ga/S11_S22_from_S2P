@@ -103,13 +103,18 @@ if uploaded_file:
     # ==========================
     fig1, ax1 = plt.subplots()
     ax1.plot(df_plot["Freq_MHz"], df_plot["S11_dB"], label="S11 (dB)")
-    for f in freq_interesse:
+    
+    # Lista de cores para as linhas verticais
+    cores = ["red", "green", "blue"]
+    
+    for f, cor in zip(freq_interesse, cores):
         if freq_min <= f <= freq_max:
-            ax1.axvline(x=f, color="red", linestyle="--", linewidth=1, label=f"{f:.0f} MHz")
+            ax2.axvline(x=f, color=cor, linestyle="--", linewidth=1, alpha=0.9, label=f"{f:.0f} MHz")
+    
     ax1.set_xlabel("Frequência (MHz)")
-    ax1.set_ylabel("S11 (dB)")
+    ax1.set_ylabel("S11 (dB)")  # Mantendo mesmo label solicitado
     ax1.set_title(titulo_s11)
-    ax1.grid(True)
+    ax1.grid(True, alpha=0.3)  # grade mais leve
     ax1.legend()
 
     # ==========================
