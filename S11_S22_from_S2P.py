@@ -135,29 +135,51 @@ if uploaded_file:
     st.pyplot(fig1)
     st.pyplot(fig2)
 
+    # --- Downloads Gráfico S11 ---
+    buf1 = io.BytesIO()
+    fig1.savefig(buf1, format="png", bbox_inches="tight")
+    buf1.seek(0)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.download_button(
+            label="📸 Baixar gráfico S11 (PNG)",
+            data=buf1,
+            file_name=f"{titulo_s11}.png",
+            mime="image/png"
+        )
+    with col2:
+        csv_s11 = df_plot[["Freq_MHz", "S11_dB"]].to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Baixar dados S11 (CSV)",
+            data=csv_s11,
+            file_name=f"{titulo_s11}_dados.csv",
+            mime="text/csv"
+        )
+
+    # --- Downloads Gráfico S22 ---
+    buf2 = io.BytesIO()
+    fig2.savefig(buf2, format="png", bbox_inches="tight")
+    buf2.seek(0)
+    col3, col4 = st.columns(2)
+    with col3:
+        st.download_button(
+            label="📸 Baixar gráfico S22 (PNG)",
+            data=buf2,
+            file_name=f"{titulo_s22}.png",
+            mime="image/png"
+        )
+    with col4:
+        csv_s22 = df_plot[["Freq_MHz", "S22_dB"]].to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Baixar dados S22 (CSV)",
+            data=csv_s22,
+            file_name=f"{titulo_s22}_dados.csv",
+            mime="text/csv"
+        )
+
+
     # --- Tabela com valores sem casas decimais ---
     st.subheader("📊 Valores nas frequências de interesse")
     st.dataframe(resultados_df.style.format({"S11 (dB)": "{:.0f}", "S22 (dB)": "{:.0f}"}))
 
     # ==========================
-    # Download gráficos
-    # ==========================
-    buf1 = io.BytesIO()
-    fig1.savefig(buf1, format="png", bbox_inches="tight")
-    buf1.seek(0)
-    st.download_button(
-        label="📸 Baixar gráfico S11 (PNG)",
-        data=buf1,
-        file_name=f"{titulo_s11}.png",
-        mime="image/png"
-    )
-
-    buf2 = io.BytesIO()
-    fig2.savefig(buf2, format="png", bbox_inches="tight")
-    buf2.seek(0)
-    st.download_button(
-        label="📸 Baixar gráfico S22 (PNG)",
-        data=buf2,
-        file_name=f"{titulo_s22}.png",
-        mime="image/png"
-    )
