@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import io
 
 # ==========================
-# Função de leitura inteligente de .S2P
+# Função de leitura de arquivo S2P
 # ==========================
 def read_s2p_smart(file):
     """
@@ -71,21 +71,29 @@ if uploaded_file:
     df = read_s2p_smart(uploaded_file)
     st.success("✅ Arquivo lido com sucesso!")
 
-    # Entradas do usuário
-    titulo_s11 = st.text_input("Título do gráfico S11", value="S11")
-    titulo_s22 = st.text_input("Título do gráfico S22", value="S22")
+    # --- Linha 1: Títulos ---
+    col1, col2 = st.columns(2)
+    with col1:
+        titulo_s11 = st.text_input("Título do gráfico S11", value="S11")
+    with col2:
+        titulo_s22 = st.text_input("Título do gráfico S22", value="S22")
 
-    # Limites de frequência
-    freq_min = st.number_input("Frequência mínima (MHz)", value=float(df["Freq_MHz"].min()))
-    freq_max = st.number_input("Frequência máxima (MHz)", value=float(df["Freq_MHz"].max()))
+    # --- Linha 2: Limites e frequências ---
+    c1, c2, c3, c4, c5 = st.columns(5)
+    with c1:
+        freq_min = st.number_input("Freq. mínima (MHz)", value=float(df["Freq_MHz"].min()))
+    with c2:
+        freq_max = st.number_input("Freq. máxima (MHz)", value=float(df["Freq_MHz"].max()))
+    with c3:
+        f1 = st.number_input("Frequência 1 (MHz)", value=350.0)
+    with c4:
+        f2 = st.number_input("Frequência 2 (MHz)", value=400.0)
+    with c5:
+        f3 = st.number_input("Frequência 3 (MHz)", value=450.0)
 
-    # Frequências de interesse
-    f1 = st.number_input("Frequência 1 (MHz)", value=350.0)
-    f2 = st.number_input("Frequência 2 (MHz)", value=400.0)
-    f3 = st.number_input("Frequência 3 (MHz)", value=450.0)
     freq_interesse = [f1, f2, f3]
 
-    # Interpolar valores
+    # --- Interpolação ---
     def interpola(df, freq, col):
         return np.interp(freq, df["Freq_MHz"], df[col])
 
@@ -96,7 +104,7 @@ if uploaded_file:
         resultados.append({"Frequência (MHz)": f, "S11 (dB)": s11_db, "S22 (dB)": s22_db})
     resultados_df = pd.DataFrame(resultados)
 
-    # Filtrar faixa de frequência escolhida
+    # --- Filtro de faixa ---
     df_plot = df[(df["Freq_MHz"] >= freq_min) & (df["Freq_MHz"] <= freq_max)]
 
     # ==========================
@@ -125,16 +133,16 @@ if uploaded_file:
     ax2.grid(True)
     ax2.legend()
 
-    # Mostrar gráficos
+    # --- Mostrar gráficos ---
     st.pyplot(fig1)
     st.pyplot(fig2)
 
-    # Mostrar tabela
+    # --- Tabela ---
     st.subheader("📊 Valores nas frequências de interesse")
     st.dataframe(resultados_df.style.format({"S11 (dB)": "{:.2f}", "S22 (dB)": "{:.2f}"}))
 
     # ==========================
-    # Download dos resultados
+    # Downloads
     # ==========================
     csv = resultados_df.to_csv(index=False).encode('utf-8')
     st.download_button(
