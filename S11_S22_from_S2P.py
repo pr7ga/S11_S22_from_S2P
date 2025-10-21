@@ -105,9 +105,9 @@ if uploaded_file:
     ax1.plot(df_plot["Freq_MHz"], df_plot["S11_dB"], label="S11 (dB)")
     for f in freq_interesse:
         if freq_min <= f <= freq_max:
-            ax1.axvline(x=f, color="red", linestyle="--", linewidth=1, label=f"{f:.2f} MHz")
+            ax1.axvline(x=f, color="red", linestyle="--", linewidth=1, label=f"{f:.0f} MHz")
     ax1.set_xlabel("Frequência (MHz)")
-    ax1.set_ylabel("S11")
+    ax1.set_ylabel("S11 (dB)")
     ax1.set_title(titulo_s11)
     ax1.grid(True)
     ax1.legend()
@@ -116,10 +116,10 @@ if uploaded_file:
     # Gráfico S22
     # ==========================
     fig2, ax2 = plt.subplots()
-    ax2.plot(df_plot["Freq_MHz"], df_plot["S22_dB"], label="S11 (dB)", color='blue')
+    ax2.plot(df_plot["Freq_MHz"], df_plot["S22_dB"], label="S11 (dB)")
     for f in freq_interesse:
         if freq_min <= f <= freq_max:
-            ax2.axvline(x=f, color="red", linestyle="--", linewidth=1, label=f"{f:.2f} MHz")
+            ax2.axvline(x=f, color="red", linestyle="--", linewidth=1, label=f"{f:.0f} MHz")
     ax2.set_xlabel("Frequência (MHz)")
     ax2.set_ylabel("S11 (dB)")  # Mantendo mesmo label solicitado
     ax2.set_title(titulo_s22)
@@ -132,7 +132,7 @@ if uploaded_file:
 
     # --- Tabela ---
     st.subheader("📊 Valores nas frequências de interesse")
-    st.dataframe(resultados_df.style.format({"S11 (dB)": "{:.2f}", "S11 (dB)": "{:.2f}"}))
+    st.dataframe(resultados_df.style.format({"S11 (dB)": "{:.0f}", "S11 (dB)": "{:.0f}"}))
 
     # ==========================
     # Download CSV filtrado pelo range
