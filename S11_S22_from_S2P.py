@@ -128,7 +128,7 @@ if uploaded_file:
     ax2.set_xlabel("Frequência (MHz)")
     ax2.set_ylabel("S11 (dB)")  # Mantendo mesmo label solicitado
     ax2.set_title(titulo_s22)
-    ax2.grid(True)
+    ax2.grid(True, alpha=0.3)  # grade mais leve
     ax2.legend()
 
 
