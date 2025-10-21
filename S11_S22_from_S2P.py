@@ -8,12 +8,6 @@ import io
 # Função de leitura de arquivo S2P
 # ==========================
 def read_s2p_smart(file):
-    """
-    Lê um arquivo .S2P e retorna DataFrame com colunas:
-    'Freq_MHz', 'S11_dB', 'S22_dB'
-    Detecta automaticamente se os S estão em dB (DB) ou magnitude (MA)
-    e se freq está em Hz.
-    """
     raw = file.getvalue().decode(errors="replace").splitlines()
 
     option_line = None
@@ -46,10 +40,8 @@ def read_s2p_smart(file):
         "S12_val","S12_phase","S22_val","S22_phase"
     ], dtype=float)
 
-    # Converte frequência para MHz se necessário
     df["Freq_MHz"] = df["Freq"] / 1e6 if freq_unit_is_hz else df["Freq"]
 
-    # Converte para dB se necessário
     if s_in_db:
         df["S11_dB"] = df["S11_val"]
         df["S22_dB"] = df["S22_val"]
@@ -58,7 +50,6 @@ def read_s2p_smart(file):
         df["S22_dB"] = 20 * np.log10(np.maximum(df["S22_val"], 1e-20))
 
     return df[["Freq_MHz", "S11_dB", "S22_dB"]]
-
 
 # ==========================
 # Interface Streamlit
@@ -93,7 +84,10 @@ if uploaded_file:
 
     freq_interesse = [f1, f2, f3]
 
-    # --- Interpolação ---
+    # --- Filtro de faixa para gráficos e CSV ---
+    df_plot = df[(df["Freq_MHz"] >= freq_min) & (df["Freq_MHz"] <= freq_max)]
+
+    # --- Interpolação para tabela de frequências de interesse ---
     def interpola(df, freq, col):
         return np.interp(freq, df["Freq_MHz"], df[col])
 
@@ -104,18 +98,16 @@ if uploaded_file:
         resultados.append({"Frequência (MHz)": f, "S11 (dB)": s11_db, "S22 (dB)": s22_db})
     resultados_df = pd.DataFrame(resultados)
 
-    # --- Filtro de faixa ---
-    df_plot = df[(df["Freq_MHz"] >= freq_min) & (df["Freq_MHz"] <= freq_max)]
-
     # ==========================
     # Gráfico S11
     # ==========================
     fig1, ax1 = plt.subplots()
-    ax1.plot(df_plot["Freq_MHz"], df_plot["S11_dB"], label="S11 (dB)")
+    ax1.plot(df_plot["Freq_MHz"], df_plot["S11_dB"], label="S11")
     for f in freq_interesse:
-        ax1.axvline(x=f, color="red", linestyle="--", linewidth=1)
+        if freq_min <= f <= freq_max:
+            ax1.axvline(x=f, color="red", linestyle="--", linewidth=1, label=f"{f:.2f} MHz")
     ax1.set_xlabel("Frequência (MHz)")
-    ax1.set_ylabel("S11 (dB)")
+    ax1.set_ylabel("S11")
     ax1.set_title(titulo_s11)
     ax1.grid(True)
     ax1.legend()
@@ -124,11 +116,12 @@ if uploaded_file:
     # Gráfico S22
     # ==========================
     fig2, ax2 = plt.subplots()
-    ax2.plot(df_plot["Freq_MHz"], df_plot["S22_dB"], label="S22 (dB)", color='orange')
+    ax2.plot(df_plot["Freq_MHz"], df_plot["S22_dB"], label="S22", color='orange')
     for f in freq_interesse:
-        ax2.axvline(x=f, color="red", linestyle="--", linewidth=1)
+        if freq_min <= f <= freq_max:
+            ax2.axvline(x=f, color="red", linestyle="--", linewidth=1, label=f"{f:.2f} MHz")
     ax2.set_xlabel("Frequência (MHz)")
-    ax2.set_ylabel("S22 (dB)")
+    ax2.set_ylabel("S11")  # Mantendo mesmo label solicitado
     ax2.set_title(titulo_s22)
     ax2.grid(True)
     ax2.legend()
@@ -142,16 +135,19 @@ if uploaded_file:
     st.dataframe(resultados_df.style.format({"S11 (dB)": "{:.2f}", "S22 (dB)": "{:.2f}"}))
 
     # ==========================
-    # Downloads
+    # Download CSV filtrado pelo range
     # ==========================
-    csv = resultados_df.to_csv(index=False).encode('utf-8')
+    csv = df_plot.to_csv(index=False).encode('utf-8')
     st.download_button(
-        label="📥 Baixar dados em CSV",
+        label="📥 Baixar dados do gráfico em CSV",
         data=csv,
-        file_name=f"{titulo_s11}_{titulo_s22}_dados.csv",
+        file_name=f"{titulo_s11}_{titulo_s22}_dados_filtrados.csv",
         mime="text/csv"
     )
 
+    # ==========================
+    # Download gráficos
+    # ==========================
     buf1 = io.BytesIO()
     fig1.savefig(buf1, format="png", bbox_inches="tight")
     buf1.seek(0)
