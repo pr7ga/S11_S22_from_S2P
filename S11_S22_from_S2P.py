@@ -69,13 +69,17 @@ uploaded_file = st.file_uploader("Envie o arquivo .S2P", type=["s2p"])
 
 if uploaded_file:
     df = read_s2p_smart(uploaded_file)
-
     st.success("✅ Arquivo lido com sucesso!")
 
-    # Entrada de títulos e frequências
+    # Entradas do usuário
     titulo_s11 = st.text_input("Título do gráfico S11", value="S11")
     titulo_s22 = st.text_input("Título do gráfico S22", value="S22")
 
+    # Limites de frequência
+    freq_min = st.number_input("Frequência mínima (MHz)", value=float(df["Freq_MHz"].min()))
+    freq_max = st.number_input("Frequência máxima (MHz)", value=float(df["Freq_MHz"].max()))
+
+    # Frequências de interesse
     f1 = st.number_input("Frequência 1 (MHz)", value=350.0)
     f2 = st.number_input("Frequência 2 (MHz)", value=400.0)
     f3 = st.number_input("Frequência 3 (MHz)", value=450.0)
@@ -92,14 +96,16 @@ if uploaded_file:
         resultados.append({"Frequência (MHz)": f, "S11 (dB)": s11_db, "S22 (dB)": s22_db})
     resultados_df = pd.DataFrame(resultados)
 
+    # Filtrar faixa de frequência escolhida
+    df_plot = df[(df["Freq_MHz"] >= freq_min) & (df["Freq_MHz"] <= freq_max)]
+
     # ==========================
     # Gráfico S11
     # ==========================
     fig1, ax1 = plt.subplots()
-    ax1.plot(df["Freq_MHz"], df["S11_dB"], label="S11 (dB)")
-    ax1.scatter(resultados_df["Frequência (MHz)"], resultados_df["S11 (dB)"], color='red', label="Frequências de interesse")
-    for _, row in resultados_df.iterrows():
-        ax1.text(row["Frequência (MHz)"], row["S11 (dB)"], f"{row['S11 (dB)']:.2f} dB", fontsize=8, ha='left', va='bottom')
+    ax1.plot(df_plot["Freq_MHz"], df_plot["S11_dB"], label="S11 (dB)")
+    for f in freq_interesse:
+        ax1.axvline(x=f, color="red", linestyle="--", linewidth=1)
     ax1.set_xlabel("Frequência (MHz)")
     ax1.set_ylabel("S11 (dB)")
     ax1.set_title(titulo_s11)
@@ -110,10 +116,9 @@ if uploaded_file:
     # Gráfico S22
     # ==========================
     fig2, ax2 = plt.subplots()
-    ax2.plot(df["Freq_MHz"], df["S22_dB"], label="S22 (dB)", color='orange')
-    ax2.scatter(resultados_df["Frequência (MHz)"], resultados_df["S22 (dB)"], color='red', label="Frequências de interesse")
-    for _, row in resultados_df.iterrows():
-        ax2.text(row["Frequência (MHz)"], row["S22 (dB)"], f"{row['S22 (dB)']:.2f} dB", fontsize=8, ha='left', va='bottom')
+    ax2.plot(df_plot["Freq_MHz"], df_plot["S22_dB"], label="S22 (dB)", color='orange')
+    for f in freq_interesse:
+        ax2.axvline(x=f, color="red", linestyle="--", linewidth=1)
     ax2.set_xlabel("Frequência (MHz)")
     ax2.set_ylabel("S22 (dB)")
     ax2.set_title(titulo_s22)
@@ -126,7 +131,7 @@ if uploaded_file:
 
     # Mostrar tabela
     st.subheader("📊 Valores nas frequências de interesse")
-    st.dataframe(resultados_df)
+    st.dataframe(resultados_df.style.format({"S11 (dB)": "{:.2f}", "S22 (dB)": "{:.2f}"}))
 
     # ==========================
     # Download dos resultados
