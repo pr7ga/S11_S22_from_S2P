@@ -123,7 +123,7 @@ if uploaded_file:
     
     for f, cor in zip(freq_interesse, cores):
         if freq_min <= f <= freq_max:
-            ax2.axvline(x=f, color=cor, linestyle="--", linewidth=1, alpha=0.5, label=f"{f:.0f} MHz")
+            ax2.axvline(x=f, color=cor, linestyle="--", linewidth=1, alpha=0.9, label=f"{f:.0f} MHz")
     
     ax2.set_xlabel("Frequência (MHz)")
     ax2.set_ylabel("S11 (dB)")  # Mantendo mesmo label solicitado
