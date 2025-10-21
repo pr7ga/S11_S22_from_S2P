@@ -140,17 +140,6 @@ if uploaded_file:
     st.dataframe(resultados_df.style.format({"S11 (dB)": "{:.0f}", "S22 (dB)": "{:.0f}"}))
 
     # ==========================
-    # Download CSV filtrado pelo range
-    # ==========================
-    csv = df_plot.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="📥 Baixar dados do gráfico em CSV",
-        data=csv,
-        file_name=f"{titulo_s11}_{titulo_s22}_dados_filtrados.csv",
-        mime="text/csv"
-    )
-
-    # ==========================
     # Download gráficos
     # ==========================
     buf1 = io.BytesIO()
