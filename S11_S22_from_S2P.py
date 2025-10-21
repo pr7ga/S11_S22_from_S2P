@@ -119,7 +119,7 @@ if uploaded_file:
     # Gráfico S22
     # ==========================
     fig2, ax2 = plt.subplots()
-    ax2.plot(df_plot["Freq_MHz"], df_plot["S22_dB"], label="S11 (dB)", color='orange')
+    ax2.plot(df_plot["Freq_MHz"], df_plot["S22_dB"], label="S11 (dB)")
 
     for f, cor in zip(freq_interesse, cores):
         if freq_min <= f <= freq_max:
