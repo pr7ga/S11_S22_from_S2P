@@ -78,9 +78,9 @@ if uploaded_file:
     with c3:
         f1 = st.number_input("Frequência 1 (MHz)", value=350.0)
     with c4:
-        f2 = st.number_input("Frequência 2 (MHz)", value=400.0)
+        f2 = st.number_input("Frequência 2 (MHz)", value=900.0)
     with c5:
-        f3 = st.number_input("Frequência 3 (MHz)", value=450.0)
+        f3 = st.number_input("Frequência 3 (MHz)", value=1500.0)
 
     freq_interesse = [f1, f2, f3]
 
