@@ -180,6 +180,6 @@ if uploaded_file:
 
     # --- Tabela com valores sem casas decimais ---
     st.subheader("📊 Valores nas frequências de interesse")
-    st.dataframe(resultados_df.style.format({"S11 (dB)": "{:.0f}", "S22 (dB)": "{:.0f}"}))
+    st.dataframe(resultados_df.style.format({"S11 (dB)": "{:.2f}", "S22 (dB)": "{:.2f}"}))
 
     # ==========================
