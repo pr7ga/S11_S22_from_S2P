@@ -173,5 +173,8 @@ if uploaded_file:
     # --- Tabela com valores ---
     st.subheader("📊 Valores nas frequências de interesse")
     st.dataframe(resultados_df.style.format({
-        "S11 (dB)": "{:.2f}", "S21 (dB)": "{:.2f}", "S22 (dB)": "{:.2f}"
+        "S11 (dB)": lambda x: f"{x:.2f}".replace('.', ','),
+        "S21 (dB)": lambda x: f"{x:.2f}".replace('.', ','),
+        "S22 (dB)": lambda x: f"{x:.2f}".replace('.', ','),
+        "Frequência (MHz)": lambda x: f"{x:.2f}".replace('.', ',')
     }))
