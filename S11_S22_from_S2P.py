@@ -44,17 +44,19 @@ def read_s2p_smart(file):
 
     if s_in_db:
         df["S11_dB"] = df["S11_val"]
+        df["S21_dB"] = df["S21_val"]
         df["S22_dB"] = df["S22_val"]
     else:
         df["S11_dB"] = 20 * np.log10(np.maximum(df["S11_val"], 1e-20))
+        df["S21_dB"] = 20 * np.log10(np.maximum(df["S21_val"], 1e-20))
         df["S22_dB"] = 20 * np.log10(np.maximum(df["S22_val"], 1e-20))
 
-    return df[["Freq_MHz", "S11_dB", "S22_dB"]]
+    return df[["Freq_MHz", "S11_dB", "S21_dB", "S22_dB"]]
 
 # ==========================
 # Interface Streamlit
 # ==========================
-st.title("📡 Análise de S11 e S22 a partir de arquivo .S2P")
+st.title("📡 Análise de S11, S21 e S22 a partir de arquivo .S2P")
 
 uploaded_file = st.file_uploader("Envie o arquivo .S2P", type=["s2p"])
 
@@ -63,10 +65,12 @@ if uploaded_file:
     st.success("✅ Arquivo lido com sucesso!")
 
     # --- Linha 1: Títulos ---
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
         titulo_s11 = st.text_input("Título do gráfico S11", value="S11")
     with col2:
+        titulo_s21 = st.text_input("Título do gráfico S21", value="S21")
+    with col3:
         titulo_s22 = st.text_input("Título do gráfico S22", value="S22")
 
     # --- Linha 2: Limites e frequências ---
@@ -84,31 +88,31 @@ if uploaded_file:
 
     freq_interesse = [f1, f2, f3]
 
-    # --- Filtro de faixa para gráficos e CSV ---
+    # --- Filtro de faixa ---
     df_plot = df[(df["Freq_MHz"] >= freq_min) & (df["Freq_MHz"] <= freq_max)]
 
-    # --- Interpolação para tabela de frequências de interesse ---
+    # --- Interpolação ---
     def interpola(df, freq, col):
         return np.interp(freq, df["Freq_MHz"], df[col])
 
     resultados = []
     for f in freq_interesse:
         s11_db = interpola(df, f, "S11_dB")
+        s21_db = interpola(df, f, "S21_dB")
         s22_db = interpola(df, f, "S22_dB")
-        resultados.append({"Frequência (MHz)": f, "S11 (dB)": s11_db, "S22 (dB)": s22_db})
+        resultados.append({"Frequência (MHz)": f, "S11 (dB)": s11_db, "S21 (dB)": s21_db, "S22 (dB)": s22_db})
     resultados_df = pd.DataFrame(resultados)
+
+    cores = ["red", "green", "blue"]
 
     # ==========================
     # Gráfico S11
     # ==========================
     fig1, ax1 = plt.subplots()
     ax1.plot(df_plot["Freq_MHz"], df_plot["S11_dB"], label="S11 (dB)")
-
-    cores = ["red", "green", "blue"]
     for f, cor in zip(freq_interesse, cores):
         if freq_min <= f <= freq_max:
             ax1.axvline(x=f, color=cor, linestyle="--", linewidth=1, alpha=0.5, label=f"{f:.0f} MHz")
-
     ax1.set_xlabel("Frequência (MHz)")
     ax1.set_ylabel("S11 (dB)")
     ax1.set_title(titulo_s11)
@@ -116,70 +120,58 @@ if uploaded_file:
     ax1.legend()
 
     # ==========================
-    # Gráfico S22
+    # Gráfico S21
     # ==========================
     fig2, ax2 = plt.subplots()
-    ax2.plot(df_plot["Freq_MHz"], df_plot["S22_dB"], label="S11 (dB)")
-
+    ax2.plot(df_plot["Freq_MHz"], df_plot["S21_dB"], label="S21 (dB)", color="orange")
     for f, cor in zip(freq_interesse, cores):
         if freq_min <= f <= freq_max:
-            ax2.axvline(x=f, color=cor, linestyle="--", linewidth=1, alpha=0.5, label=f"{f:.0f} MHz")
-
+            ax2.axvline(x=f, color=cor, linestyle="--", linewidth=1, alpha=0.5)
     ax2.set_xlabel("Frequência (MHz)")
-    ax2.set_ylabel("S11 (dB)")  # Mantendo label solicitado
-    ax2.set_title(titulo_s22)
+    ax2.set_ylabel("S21 (dB)")
+    ax2.set_title(titulo_s21)
     ax2.grid(True, alpha=0.3)
     ax2.legend()
+
+    # ==========================
+    # Gráfico S22
+    # ==========================
+    fig3, ax3 = plt.subplots()
+    ax3.plot(df_plot["Freq_MHz"], df_plot["S22_dB"], label="S22 (dB)")
+    for f, cor in zip(freq_interesse, cores):
+        if freq_min <= f <= freq_max:
+            ax3.axvline(x=f, color=cor, linestyle="--", linewidth=1, alpha=0.5)
+    ax3.set_xlabel("Frequência (MHz)")
+    ax3.set_ylabel("S22 (dB)")
+    ax3.set_title(titulo_s22)
+    ax3.grid(True, alpha=0.3)
+    ax3.legend()
 
     # --- Mostrar gráficos ---
     st.pyplot(fig1)
     st.pyplot(fig2)
+    st.pyplot(fig3)
 
-    # --- Downloads Gráfico S11 ---
-    buf1 = io.BytesIO()
-    fig1.savefig(buf1, format="png", bbox_inches="tight")
-    buf1.seek(0)
-    col1, col2 = st.columns(2)
-    with col1:
-        st.download_button(
-            label="📸 Baixar gráfico S11 (PNG)",
-            data=buf1,
-            file_name=f"{titulo_s11}.png",
-            mime="image/png"
-        )
-    with col2:
-        csv_s11 = df_plot[["Freq_MHz", "S11_dB"]].to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="📥 Baixar dados S11 (CSV)",
-            data=csv_s11,
-            file_name=f"{titulo_s11}_dados.csv",
-            mime="text/csv"
-        )
+    # --- Downloads para cada gráfico ---
+    def download_plot(fig, nome, df_cols):
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", bbox_inches="tight")
+        buf.seek(0)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.download_button(f"📸 Baixar gráfico {nome} (PNG)", data=buf, file_name=f"{nome}.png", mime="image/png")
+        with col2:
+            csv_data = df_plot[["Freq_MHz", f"{nome}_dB"]].to_csv(index=False).encode('utf-8')
+            st.download_button(f"📥 Baixar dados {nome} (CSV)", data=csv_data, file_name=f"{nome}_dados.csv", mime="text/csv")
 
-    # --- Downloads Gráfico S22 ---
-    buf2 = io.BytesIO()
-    fig2.savefig(buf2, format="png", bbox_inches="tight")
-    buf2.seek(0)
-    col3, col4 = st.columns(2)
-    with col3:
-        st.download_button(
-            label="📸 Baixar gráfico S22 (PNG)",
-            data=buf2,
-            file_name=f"{titulo_s22}.png",
-            mime="image/png"
-        )
-    with col4:
-        csv_s22 = df_plot[["Freq_MHz", "S22_dB"]].to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="📥 Baixar dados S22 (CSV)",
-            data=csv_s22,
-            file_name=f"{titulo_s22}_dados.csv",
-            mime="text/csv"
-        )
+    st.markdown("---")
+    st.subheader("📈 Downloads")
+    download_plot(fig1, "S11", df_plot)
+    download_plot(fig2, "S21", df_plot)
+    download_plot(fig3, "S22", df_plot)
 
-
-    # --- Tabela com valores sem casas decimais ---
+    # --- Tabela com valores ---
     st.subheader("📊 Valores nas frequências de interesse")
-    st.dataframe(resultados_df.style.format({"S11 (dB)": "{:.2f}", "S22 (dB)": "{:.2f}"}))
-
-    # ==========================
+    st.dataframe(resultados_df.style.format({
+        "S11 (dB)": "{:.2f}", "S21 (dB)": "{:.2f}", "S22 (dB)": "{:.2f}"
+    }))
