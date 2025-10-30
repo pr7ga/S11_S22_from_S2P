@@ -100,7 +100,12 @@ if uploaded_file:
         s11_db = interpola(df, f, "S11_dB")
         s21_db = interpola(df, f, "S21_dB")
         s22_db = interpola(df, f, "S22_dB")
-        resultados.append({"Frequência (MHz)": f, "S11 (dB)": s11_db, "S21 (dB)": s21_db, "S22 (dB)": s22_db})
+        resultados.append({
+            "Frequência (MHz)": f,
+            "S11 (dB)": s11_db,
+            "S21 (dB)": s21_db,
+            "S22 (dB)": s22_db
+        })
     resultados_df = pd.DataFrame(resultados)
 
     cores = ["red", "green", "blue"]
@@ -172,9 +177,10 @@ if uploaded_file:
 
     # --- Tabela com valores ---
     st.subheader("📊 Valores nas frequências de interesse")
-    st.dataframe(resultados_df.style.format({
-        "S11 (dB)": lambda x: f"{x:.2f}".replace('.', ','),
-        "S21 (dB)": lambda x: f"{x:.2f}".replace('.', ','),
-        "S22 (dB)": lambda x: f"{x:.2f}".replace('.', ','),
-        "Frequência (MHz)": lambda x: f"{x:.2f}".replace('.', ',')
-    }))
+
+    # ✅ Converte os números para strings formatadas (duas casas e vírgula)
+    resultados_df_fmt = resultados_df.copy()
+    for col in resultados_df_fmt.columns:
+        resultados_df_fmt[col] = resultados_df_fmt[col].apply(lambda x: f"{x:.2f}".replace('.', ','))
+
+    st.dataframe(resultados_df_fmt)
