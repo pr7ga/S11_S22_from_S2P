@@ -151,7 +151,16 @@ if uploaded_file:
     ax3.set_title(titulo_s22)
     ax3.grid(True, alpha=0.3)
     ax3.legend()
+    
+    # --- Tabela com valores ---
+    st.subheader("📊 Valores nas frequências de interesse")
 
+    # ✅ Converte os números para strings formatadas (duas casas e vírgula)
+    resultados_df_fmt = resultados_df.copy()
+    for col in resultados_df_fmt.columns:
+        resultados_df_fmt[col] = resultados_df_fmt[col].apply(lambda x: f"{x:.2f}".replace('.', ','))
+
+    st.dataframe(resultados_df_fmt)
     # --- Mostrar gráficos ---
     st.pyplot(fig1)
     st.pyplot(fig2)
@@ -175,12 +184,4 @@ if uploaded_file:
     download_plot(fig2, "S21", df_plot)
     download_plot(fig3, "S22", df_plot)
 
-    # --- Tabela com valores ---
-    st.subheader("📊 Valores nas frequências de interesse")
 
-    # ✅ Converte os números para strings formatadas (duas casas e vírgula)
-    resultados_df_fmt = resultados_df.copy()
-    for col in resultados_df_fmt.columns:
-        resultados_df_fmt[col] = resultados_df_fmt[col].apply(lambda x: f"{x:.2f}".replace('.', ','))
-
-    st.dataframe(resultados_df_fmt)
