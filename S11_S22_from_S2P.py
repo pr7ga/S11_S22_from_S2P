@@ -155,33 +155,43 @@ if uploaded_file:
     # --- Tabela com valores ---
     st.subheader("📊 Valores nas frequências de interesse")
 
-    # ✅ Converte os números para strings formatadas (duas casas e vírgula)
+    # Converte números para strings com vírgula
     resultados_df_fmt = resultados_df.copy()
     for col in resultados_df_fmt.columns:
         resultados_df_fmt[col] = resultados_df_fmt[col].apply(lambda x: f"{x:.2f}".replace('.', ','))
 
     st.dataframe(resultados_df_fmt)
+
     # --- Mostrar gráficos ---
     st.pyplot(fig1)
     st.pyplot(fig2)
     st.pyplot(fig3)
 
     # --- Downloads para cada gráfico ---
-    def download_plot(fig, nome, df_cols):
+    def download_plot(fig, titulo_usuario, nome_coluna):
         buf = io.BytesIO()
         fig.savefig(buf, format="png", bbox_inches="tight")
         buf.seek(0)
         col1, col2 = st.columns(2)
         with col1:
-            st.download_button(f"📸 Baixar gráfico {nome} (PNG)", data=buf, file_name=f"{nome}.png", mime="image/png")
+            st.download_button(
+                f"📸 Baixar gráfico {titulo_usuario} (PNG)",
+                data=buf,
+                file_name=f"{titulo_usuario}.png",
+                mime="image/png"
+            )
         with col2:
-            csv_data = df_plot[["Freq_MHz", f"{nome}_dB"]].to_csv(index=False).encode('utf-8')
-            st.download_button(f"📥 Baixar dados {nome} (CSV)", data=csv_data, file_name=f"{nome}_dados.csv", mime="text/csv")
+            csv_data = df_plot[["Freq_MHz", nome_coluna]].to_csv(index=False).encode('utf-8')
+            st.download_button(
+                f"📥 Baixar dados {titulo_usuario} (CSV)",
+                data=csv_data,
+                file_name=f"{titulo_usuario}_dados.csv",
+                mime="text/csv"
+            )
 
     st.markdown("---")
     st.subheader("📈 Downloads")
-    download_plot(fig1, "S11", df_plot)
-    download_plot(fig2, "S21", df_plot)
-    download_plot(fig3, "S22", df_plot)
 
-
+    download_plot(fig1, titulo_s11, "S11_dB")
+    download_plot(fig2, titulo_s21, "S21_dB")
+    download_plot(fig3, titulo_s22, "S22_dB")
