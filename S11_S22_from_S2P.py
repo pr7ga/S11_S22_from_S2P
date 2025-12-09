@@ -45,13 +45,15 @@ def read_s2p_smart(file):
     if s_in_db:
         df["S11_dB"] = df["S11_val"]
         df["S21_dB"] = df["S21_val"]
+        df["S12_dB"] = df["S12_val"]   # ← ADICIONADO
         df["S22_dB"] = df["S22_val"]
     else:
         df["S11_dB"] = 20 * np.log10(np.maximum(df["S11_val"], 1e-20))
         df["S21_dB"] = 20 * np.log10(np.maximum(df["S21_val"], 1e-20))
+        df["S12_dB"] = 20 * np.log10(np.maximum(df["S12_val"], 1e-20)) # ← ADICIONADO
         df["S22_dB"] = 20 * np.log10(np.maximum(df["S22_val"], 1e-20))
 
-    return df[["Freq_MHz", "S11_dB", "S21_dB", "S22_dB"]]
+    return df[["Freq_MHz", "S11_dB", "S21_dB", "S12_dB", "S22_dB"]]   # ← ADICIONADO S12
 
 # ==========================
 # Interface Streamlit
@@ -65,12 +67,14 @@ if uploaded_file:
     st.success("✅ Arquivo lido com sucesso!")
 
     # --- Linha 1: Títulos ---
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)   # ← Aumentado para comportar S12
     with col1:
         titulo_s11 = st.text_input("Título do gráfico S11", value="S11")
     with col2:
         titulo_s21 = st.text_input("Título do gráfico S21", value="S21")
     with col3:
+        titulo_s12 = st.text_input("Título do gráfico S12", value="S12")   # ← ADICIONADO
+    with col4:
         titulo_s22 = st.text_input("Título do gráfico S22", value="S22")
 
     # --- Linha 2: Limites e frequências ---
@@ -99,11 +103,13 @@ if uploaded_file:
     for f in freq_interesse:
         s11_db = interpola(df, f, "S11_dB")
         s21_db = interpola(df, f, "S21_dB")
+        s12_db = interpola(df, f, "S12_dB")   # ← ADICIONADO
         s22_db = interpola(df, f, "S22_dB")
         resultados.append({
             "Frequência (MHz)": f,
             "S11 (dB)": s11_db,
             "S21 (dB)": s21_db,
+            "S12 (dB)": s12_db,      # ← ADICIONADO
             "S22 (dB)": s22_db
         })
     resultados_df = pd.DataFrame(resultados)
@@ -139,6 +145,20 @@ if uploaded_file:
     ax2.legend()
 
     # ==========================
+    # Gráfico S12  ← ADICIONADO
+    # ==========================
+    fig4, ax4 = plt.subplots()
+    ax4.plot(df_plot["Freq_MHz"], df_plot["S12_dB"], label="S12 (dB)", color="purple")
+    for f, cor in zip(freq_interesse, cores):
+        if freq_min <= f <= freq_max:
+            ax4.axvline(x=f, color=cor, linestyle="--", linewidth=1, alpha=0.5)
+    ax4.set_xlabel("Frequência (MHz)")
+    ax4.set_ylabel("S12 (dB)")
+    ax4.set_title(titulo_s12)
+    ax4.grid(True, alpha=0.3)
+    ax4.legend()
+
+    # ==========================
     # Gráfico S22
     # ==========================
     fig3, ax3 = plt.subplots()
@@ -155,7 +175,6 @@ if uploaded_file:
     # --- Tabela com valores ---
     st.subheader("📊 Valores nas frequências de interesse")
 
-    # Converte números para strings com vírgula
     resultados_df_fmt = resultados_df.copy()
     for col in resultados_df_fmt.columns:
         resultados_df_fmt[col] = resultados_df_fmt[col].apply(lambda x: f"{x:.2f}".replace('.', ','))
@@ -165,9 +184,10 @@ if uploaded_file:
     # --- Mostrar gráficos ---
     st.pyplot(fig1)
     st.pyplot(fig2)
+    st.pyplot(fig4)   # ← ADICIONADO S12
     st.pyplot(fig3)
 
-    # --- Downloads para cada gráfico ---
+    # --- Downloads ---
     def download_plot(fig, titulo_usuario, nome_coluna):
         buf = io.BytesIO()
         fig.savefig(buf, format="png", bbox_inches="tight")
@@ -194,4 +214,5 @@ if uploaded_file:
 
     download_plot(fig1, titulo_s11, "S11_dB")
     download_plot(fig2, titulo_s21, "S21_dB")
+    download_plot(fig4, titulo_s12, "S12_dB")  # ← DOWNLOAD S12
     download_plot(fig3, titulo_s22, "S22_dB")
